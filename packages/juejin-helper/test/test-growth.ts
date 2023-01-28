@@ -11,7 +11,15 @@ async function run() {
 
   const status = await growth.getTodayStatus();
   console.log(`签到状态: ${status}`);
-
+  const vipData = (await growth.getUserVIPInfo()) as any;
+  const recommendArticles = (await growth.getRecommendArticles({
+    limit: vipData?.user_growth_info?.vip_level !== 0 ? 5 : 1
+  })) as any;
+  recommendArticles.forEach((l: any) =>
+    growth.readArticle(l.item_info.article_id).catch(e => {
+      throw new e();
+    })
+  );
   const counts = await growth.getCounts();
   console.log(`连续签到天数 ${counts.cont_count}, 累计签到天数${counts.sum_count}`);
 

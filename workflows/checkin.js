@@ -1,5 +1,5 @@
 import notification from "./utils/notification-kit";
-const JuejinHelper = require("juejin-helper");
+const JuejinHelper = require("../packages/juejin-helper/src/index");
 const utils = require("./utils/utils");
 const env = require("./utils/env");
 
@@ -25,6 +25,7 @@ class GrowthTask extends Task {
   sumPoint = 0; // 当前矿石数
   contCount = 0; // 连续签到天数
   sumCount = 0; // 累计签到天数
+  readCount = 0; // 阅读文章数量
 
   async run() {
     const growth = this.juejin.growth();
@@ -32,13 +33,24 @@ class GrowthTask extends Task {
     const todayStatus = await growth.getTodayStatus();
     if (!todayStatus) {
       const checkInResult = await growth.checkIn();
-
       this.incrPoint = checkInResult.incr_point;
       this.sumPoint = checkInResult.sum_point;
       this.todayStatus = 1; // 本次签到
     } else {
       this.todayStatus = 2; // 已签到
     }
+
+    // 阅读文章任务
+    const vipData = await growth.getUserVIPInfo();
+    this.readCount = vipData?.user_growth_info?.vip_level !== 0 ? 5 : 1;
+    const recommendArticles = await growth.getRecommendArticles({
+      limit: this.readCount
+    });
+    recommendArticles.forEach(l =>
+      growth.readArticle(l.item_info.article_id).catch(e => {
+        throw e;
+      })
+    );
 
     const counts = await growth.getCounts();
     this.contCount = counts.cont_count;
@@ -298,6 +310,7 @@ ${
       : "没有可收集Bug"
     : "收集Bug失败"
 }
+今日阅读文章数量 ${this.growthTask?.readCount}
 连续签到天数 ${this.growthTask.contCount}
 累计签到天数 ${this.growthTask.sumCount}
 当前矿石数 ${this.growthTask.sumPoint}

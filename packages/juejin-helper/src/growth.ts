@@ -99,7 +99,34 @@ class Growth {
   async drawLottery() {
     return this.http.post("/growth_api/v1/lottery/draw");
   }
-
+  async getUserVIPInfo() {
+    return this.http.post("/user_api/v1/vip/info");
+  }
+  async getRecommendArticles(
+    body: {
+      id_type?: number;
+      client_type?: number;
+      sort_type?: number;
+      cursor?: `${number}`;
+      limit?: number;
+    } = {}
+  ) {
+    const assignBody = Object.assign(
+      {},
+      {
+        id_type: 2,
+        client_type: 2608,
+        sort_type: 200,
+        cursor: "0",
+        limit: 10
+      },
+      body
+    );
+    return this.http.post("/recommend_api/v1/article/recommend_all_feed", assignBody);
+  }
+  async readArticle(articleId: `${number}`) {
+    return this.http.get(`https://juejin.cn/post/${articleId}`);
+  }
   async checkIn() {
     return this.http.post("/growth_api/v1/check_in");
   }
